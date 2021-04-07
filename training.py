@@ -92,7 +92,7 @@ class NeuralProcessTrainer():
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
                     hidden = \
-                        self.gru_net.init_hidden(batch_size)
+                        self.gru_net.init_hidden(2)
                     p_y_pred_gru, hidden = \
                         self.gru_net(p_y_pred, hidden)
 

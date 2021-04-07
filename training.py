@@ -1,6 +1,7 @@
 import torch
 from random import randint
 from neural_process import NeuralProcessImg
+from models import GRUNet
 from torch import nn
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
@@ -31,10 +32,11 @@ class NeuralProcessTrainer():
     print_freq : int
         Frequency with which to print loss information during training.
     """
-    def __init__(self, device, neural_process, optimizer, num_context_range,
+    def __init__(self, device, neural_process, gru_net, optimizer, num_context_range,
                  num_extra_target_range, print_freq=100):
         self.device = device
         self.neural_process = neural_process
+        self.gru_net = gru_net
         self.optimizer = optimizer
         self.num_context_range = num_context_range
         self.num_extra_target_range = num_extra_target_range
@@ -89,8 +91,12 @@ class NeuralProcessTrainer():
                         context_target_split(x, y, num_context, num_extra_target)
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
+                    hidden = \
+                        self.gru_net.init_hidden(batch_size)
+                    p_y_pred_gru, hidden = \
+                        self.gru_net(p_y_pred, hidden)
 
-                loss = self._loss(p_y_pred, y_target, q_target, q_context)
+                loss = self._loss(p_y_pred_gru, y_target, q_target, q_context)
                 loss.backward()
                 self.optimizer.step()
 

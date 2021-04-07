@@ -1,14 +1,15 @@
 import torch
 from random import randint
-from neural_process import NeuralProcessImg
 from models import GRUNet
+from neural_process import NeuralProcessImg
 from torch import nn
+from torch.distributions import Normal
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
                    img_mask_to_np_input)
 
 
-class NeuralProcessTrainer():
+class NeuralProcessTrainer:
     """
     Class to handle training of Neural Processes for functions and images.
 
@@ -32,11 +33,10 @@ class NeuralProcessTrainer():
     print_freq : int
         Frequency with which to print loss information during training.
     """
-    def __init__(self, device, neural_process, gru_net, optimizer, num_context_range,
+    def __init__(self, device, neural_process, optimizer, num_context_range,
                  num_extra_target_range, print_freq=100):
         self.device = device
         self.neural_process = neural_process
-        self.gru_net = gru_net
         self.optimizer = optimizer
         self.num_context_range = num_context_range
         self.num_extra_target_range = num_extra_target_range
@@ -53,7 +53,7 @@ class NeuralProcessTrainer():
 
         Parameters
         ----------
-        dataloader : torch.utils.DataLoader instance
+        data_loader : torch.utils.DataLoader instance
 
         epochs : int
             Number of epochs to train for.
@@ -91,10 +91,17 @@ class NeuralProcessTrainer():
                         context_target_split(x, y, num_context, num_extra_target)
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
+                    print(p_y_pred.loc.shape)
+                    gru_net = GRUNet(1, 256, p_y_pred.loc.shape[1], 2)
+
+                    p_y_pred = torch.cat((p_y_pred.loc, p_y_pred.scale), 0)
+                    print(p_y_pred.shape)
                     hidden = \
-                        self.gru_net.init_hidden(2)
+                        gru_net.init_hidden(32)
                     p_y_pred_gru, hidden = \
-                        self.gru_net(p_y_pred, hidden)
+                        gru_net.forward(p_y_pred, hidden)
+                    print(p_y_pred_gru.shape)
+                    p_y_pred_gru = Normal(p_y_pred_gru[:16], abs(p_y_pred_gru[16:]))
 
                 loss = self._loss(p_y_pred_gru, y_target, q_target, q_context)
                 loss.backward()

@@ -7,7 +7,6 @@ from torch.utils.data import DataLoader
 from datasets import mnist, celeba, SineData
 from neural_process import NeuralProcessImg
 from neural_process import NeuralProcess
-from models import GRUNet
 from time import strftime
 from training import NeuralProcessTrainer
 
@@ -52,11 +51,9 @@ data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 input_data = NeuralProcess(1, 1, 50, 50, 50)
 
-gru_data = GRUNet(1, 256, 1, 2)
-
 optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
 
-np_trainer = NeuralProcessTrainer(device, input_data, gru_data, optimizer,
+np_trainer = NeuralProcessTrainer(device, input_data, optimizer,
                                   num_context_range, num_extra_target_range,
                                   print_freq=100)
 

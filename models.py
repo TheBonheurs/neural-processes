@@ -20,7 +20,7 @@ class Encoder(nn.Module):
     r_dim : int
         Dimension of output representation r.
     """
-    def __init__(self, x_dim, y_dim, h_dim, r_dim, gru):
+    def __init__(self, x_dim, y_dim, h_dim, r_dim,):
         super(Encoder, self).__init__()
 
         self.x_dim = x_dim
@@ -36,9 +36,8 @@ class Encoder(nn.Module):
 
         self.input_to_hidden = nn.Sequential(*layers)
 
-        self.gru = gru
 
-    def forward(self, x, y):
+    def forward(self, x, y, gru, get_hidden=False):
         """
         x : torch.Tensor
             Shape (batch_size, x_dim)
@@ -60,7 +59,7 @@ class Encoder(nn.Module):
         # if gru is not None
         gru = tf.tile(tf.expand_dims(drnn_h,axis=1),
                             [1, num_tar, 1])                          
-        hidden = self.gru(1,num_tar, 1, 1) if torch.equal(num_con, 0) else hidden + self.gru
+        hidden = gru(1,num_tar, 1, 1) if torch.equal(num_con, 0) else hidden + gru(1, num_tar, 1, 1)
 
         return self.input_to_hidden(input_pairs)
 
@@ -89,11 +88,19 @@ class MuSigmaEncoder(nn.Module):
         self.hidden_to_mu = nn.Linear(r_dim, z_dim)
         self.hidden_to_sigma = nn.Linear(r_dim, z_dim)
 
-    def forward(self, r):
+    def forward(self, r, gru, get_hidden=False):
         """
         r : torch.Tensor
             Shape (batch_size, r_dim)
         """
+        #not sure if needed
+        # when no data, hidden is equal to 0
+        #hidden = torch.zeros(r.shape[0], self.z_dim) if torch.equal(num_con, 0) else hidden
+
+        # Attention
+        if gru is not None:
+            hidden += gru(1, r, 1, 1)
+
         hidden = torch.relu(self.r_to_hidden(r))
         mu = self.hidden_to_mu(hidden)
         # Define sigma following convention in "Empirical Evaluation of Neural

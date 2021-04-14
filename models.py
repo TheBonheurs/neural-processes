@@ -47,6 +47,7 @@ class Encoder(nn.Module):
         """
         if(get_hidden):
             input_pairs = torch.cat((x, y), dim=1)
+
             return self.input_to_hidden(input_pairs)
 
         # Pass final axis through MLP

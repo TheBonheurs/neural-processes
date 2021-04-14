@@ -67,8 +67,9 @@ class NeuralProcess(nn.Module):
             Shape (batch_size, num_points, y_dim)
         """
         batch_size, num_points, _ = x.size()
-        init_hidden = self.gru.init_hidden(batch_size)
+        gru_i = gru.GRUNet(50, 256, 50, 1)
 
+        init_hidden = gru_i.init_hidden(batch_size)
 
         # Flatten tensors, as encoder expects one dimensional inputs
         x_flat = x.view(batch_size * num_points, self.x_dim)
@@ -80,8 +81,7 @@ class NeuralProcess(nn.Module):
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
         #
-        gru_i = gru.GRUNet(batch_size, 256, batch_size, 1)
-        r,_ = gru_i(r, init_hidden)
+        r,h = gru_i(r.unsqueeze_(1), init_hidden)
         # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
         return self.r_to_mu_sigma(r)

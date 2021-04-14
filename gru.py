@@ -21,6 +21,11 @@ class GRUNet(nn.Module):
         return out, h
     
     def init_hidden(self, batch_size):
+        is_cuda = torch.cuda.is_available()
+        if is_cuda:
+            device = torch.device("cuda")
+        else:
+            device = torch.device("cpu")
         weight = next(self.parameters()).data
         hidden = weight.new(self.n_layers, batch_size, self.hidden_dim).zero_().to(device)
         return hidden

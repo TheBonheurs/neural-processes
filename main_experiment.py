@@ -3,8 +3,10 @@ import numpy as np
 import os
 import sys
 import torch
-from datasets import mnist, celeba
+from torch.utils.data import DataLoader
+from datasets import mnist, celeba, SineData
 from neural_process import NeuralProcessImg
+from neural_process import NeuralProcess
 from time import strftime
 from training import NeuralProcessTrainer
 
@@ -38,16 +40,20 @@ num_context_range = config["num_context_range"]
 num_extra_target_range = config["num_extra_target_range"]
 epochs = config["epochs"]
 
-if config["dataset"] == "mnist":
-    data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
-elif config["dataset"] == "celeba":
-    data_loader = celeba(batch_size=batch_size, size=img_size[1])
+dataset = SineData(amplitude_range=(-1., 1.), shift_range=(-.5, .5), num_points=500)
+data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+#if config["dataset"] == "mnist":
+#    data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
+#elif config["dataset"] == "celeba":
+#    data_loader = celeba(batch_size=batch_size, size=img_size[1])
 
-np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
+#np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
 
-optimizer = torch.optim.Adam(np_img.parameters(), lr=config["lr"])
+input_data = NeuralProcess(1, 1, 50, 50, 50)
 
-np_trainer = NeuralProcessTrainer(device, np_img, optimizer,
+optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
+
+np_trainer = NeuralProcessTrainer(device, input_data, optimizer,
                                   num_context_range, num_extra_target_range,
                                   print_freq=100)
 

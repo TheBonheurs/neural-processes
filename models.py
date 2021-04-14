@@ -86,19 +86,11 @@ class MuSigmaEncoder(nn.Module):
         self.hidden_to_mu = nn.Linear(r_dim, z_dim)
         self.hidden_to_sigma = nn.Linear(r_dim, z_dim)
 
-    def forward(self, r, gru, get_hidden=False):
+    def forward(self, r, get_hidden=False):
         """
         r : torch.Tensor
             Shape (batch_size, r_dim)
         """
-        #not sure if needed
-        # when no data, hidden is equal to 0
-        #hidden = torch.zeros(r.shape[0], self.z_dim) if torch.equal(num_con, 0) else hidden
-
-        # Attention
-        if gru is not None:
-            hidden += gru(1, r, 1, 1)
-
         hidden = torch.relu(self.r_to_hidden(r))
         mu = self.hidden_to_mu(hidden)
         # Define sigma following convention in "Empirical Evaluation of Neural

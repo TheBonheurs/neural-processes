@@ -40,8 +40,6 @@ class NeuralProcess(nn.Module):
         self.r_to_mu_sigma = MuSigmaEncoder(r_dim, z_dim)
         self.xz_to_y = Decoder(x_dim, z_dim, h_dim, y_dim)
 
-        #
-        self.gru = GRUNet(0,0,0,0)
 
     def aggregate(self, r_i):
         """
@@ -69,6 +67,8 @@ class NeuralProcess(nn.Module):
             Shape (batch_size, num_points, y_dim)
         """
         batch_size, num_points, _ = x.size()
+        init_hidden = self.gru.init_hidden(batch_size)
+
 
         # Flatten tensors, as encoder expects one dimensional inputs
         x_flat = x.view(batch_size * num_points, self.x_dim)
@@ -79,10 +79,12 @@ class NeuralProcess(nn.Module):
         r_i = r_i_flat.view(batch_size, num_points, self.r_dim)
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
-        out, h = self.gru(r)
+        #
+        gru_i = gru.GRUNet(batch_size, 256, batch_size, 1)
+        r,_ = gru_i(r, init_hidden)
         # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
-        return self.r_to_mu_sigma(out)
+        return self.r_to_mu_sigma(r)
 
     def forward(self, x_context, y_context, x_target, y_target=None):
         """
@@ -114,9 +116,6 @@ class NeuralProcess(nn.Module):
         batch_size, num_context, x_dim = x_context.size()
         _, num_target, _ = x_target.size()
         _, _, y_dim = y_context.size()
-
-        init_hidden = self.gru.init_hidden(batch_size)
-
     
         if self.training:
             # Encode target and context (context needs to be encoded to

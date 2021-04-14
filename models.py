@@ -37,7 +37,7 @@ class Encoder(nn.Module):
         self.input_to_hidden = nn.Sequential(*layers)
 
 
-    def forward(self, x, y, gru, get_hidden=False):
+    def forward(self, x, y, hidden=None, get_hidden=False):
         """
         x : torch.Tensor
             Shape (batch_size, x_dim)
@@ -45,21 +45,19 @@ class Encoder(nn.Module):
         y : torch.Tensor
             Shape (batch_size, y_dim)
         """
-        input_pairs = torch.cat((x, y), dim=1)
+        if(get_hidden):
+            input_pairs = torch.cat((x, y), dim=1)
+            return self.input_to_hidden(input_pairs)
 
         # Pass final axis through MLP
         # Not sure if needed
 
         # Apply attention
 
-        # if gru is None:
-        num_tar, num_con = 0 # not sure where to pass this
-        hidden = torch.zeros(x.shape[0], num_tar, hidden.shape[-1]) if torch.equal(num_con, 0) else hidden
-    
         # if gru is not None
-        gru = tf.tile(tf.expand_dims(drnn_h,axis=1),
-                            [1, num_tar, 1])                          
-        hidden = gru(1,num_tar, 1, 1) if torch.equal(num_con, 0) else hidden + gru(1, num_tar, 1, 1)
+        # gru = tf.tile(tf.expand_dims(hidden,axis=1),
+        #                     [1, num_tar, 1])                          
+        # hidden = gru(1,num_tar, 1, 1) if torch.equal(num_con, 0) else hidden + gru(1, num_tar, 1, 1)
 
         return self.input_to_hidden(input_pairs)
 

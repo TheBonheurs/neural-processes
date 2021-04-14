@@ -1,4 +1,5 @@
 import torch
+import gru
 from models import Encoder, MuSigmaEncoder, Decoder
 from torch import nn
 from torch.distributions import Normal
@@ -39,6 +40,9 @@ class NeuralProcess(nn.Module):
         self.r_to_mu_sigma = MuSigmaEncoder(r_dim, z_dim)
         self.xz_to_y = Decoder(x_dim, z_dim, h_dim, y_dim)
 
+        #
+        self.gru = GRUNet(0,0,0,0)
+
     def aggregate(self, r_i):
         """
         Aggregates representations for every (x_i, y_i) pair into a single
@@ -65,17 +69,20 @@ class NeuralProcess(nn.Module):
             Shape (batch_size, num_points, y_dim)
         """
         batch_size, num_points, _ = x.size()
+
         # Flatten tensors, as encoder expects one dimensional inputs
         x_flat = x.view(batch_size * num_points, self.x_dim)
         y_flat = y.contiguous().view(batch_size * num_points, self.y_dim)
         # Encode each point into a representation r_i
-        r_i_flat = self.xy_to_r(x_flat, y_flat)
+        r_i_flat = self.xy_to_r(x_flat, y_flat, get_hidden=True)
         # Reshape tensors into batches
         r_i = r_i_flat.view(batch_size, num_points, self.r_dim)
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
+        out, h = self.gru(r)
+        # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
-        return self.r_to_mu_sigma(r)
+        return self.r_to_mu_sigma(out)
 
     def forward(self, x_context, y_context, x_target, y_target=None):
         """
@@ -108,6 +115,9 @@ class NeuralProcess(nn.Module):
         _, num_target, _ = x_target.size()
         _, _, y_dim = y_context.size()
 
+        init_hidden = self.gru.init_hidden(batch_size)
+
+    
         if self.training:
             # Encode target and context (context needs to be encoded to
             # calculate kl term)

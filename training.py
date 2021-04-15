@@ -63,6 +63,7 @@ class NeuralProcessTrainer():
         """
         for epoch in range(epochs):
             epoch_loss = 0.
+            self.neural_process.hidden = self.neural_process.gru.init_hidden(16)
             for i, data in enumerate(data_loader):
                 self.optimizer.zero_grad()
 

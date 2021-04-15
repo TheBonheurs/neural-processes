@@ -94,11 +94,6 @@ class NeuralProcessTrainer():
                     x, y = data
                     x_context, y_context, x_target, y_target = \
                         context_target_split(x, y, num_context, num_extra_target)
-                    print("x_target: ", x_target.size())
-                    if (self.batches != x_target.shape[0]):
-                        self.batches = x_target.shape[0]
-                        self.neural_process.hidden = self.neural_process.gru.init_hidden(self.batches)
-
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
 

@@ -42,7 +42,7 @@ num_context_range = config["num_context_range"]
 num_extra_target_range = config["num_extra_target_range"]
 epochs = config["epochs"]
 
-dataset = SineData(amplitude_range=(-1., 1.), shift_range=(-.5, .5), num_points=500)
+dataset = SineData(amplitude_range=(-1., 1.), shift_range=(-.5, .5), num_points=400, num_samples=800)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 #if config["dataset"] == "mnist":
 #    data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
@@ -52,7 +52,7 @@ data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 #np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
 
 gru = gru.GRUNet(50, 256, 50, 1)
-input_data = NeuralProcess(1, 1, 50, 50, 50, gru, gru.init_hidden(batch_size))
+input_data = NeuralProcess(1, 1, 50, 50, 50, gru, gru.init_hidden(8))
 
 optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
 

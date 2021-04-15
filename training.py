@@ -48,6 +48,7 @@ class NeuralProcessTrainer():
         self.sigma_list = []
         self.xlist = []
         self.ylist = []
+        self.batches = 16
 
 
     def train(self, data_loader, epochs):
@@ -63,7 +64,7 @@ class NeuralProcessTrainer():
         """
         for epoch in range(epochs):
             epoch_loss = 0.
-            self.neural_process.hidden = self.neural_process.gru.init_hidden(16)
+            self.neural_process.hidden = self.neural_process.gru.init_hidden(self.batches)
             for i, data in enumerate(data_loader):
                 self.optimizer.zero_grad()
 
@@ -93,6 +94,11 @@ class NeuralProcessTrainer():
                     x, y = data
                     x_context, y_context, x_target, y_target = \
                         context_target_split(x, y, num_context, num_extra_target)
+                    print("x_target: ", x_target.size())
+                    if (self.batches != x_target.shape[0]):
+                        self.batches = x_target.shape[0]
+                        self.neural_process.hidden = self.neural_process.gru.init_hidden(self.batches)
+
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
 
@@ -111,11 +117,9 @@ class NeuralProcessTrainer():
                 self.mu_list.append(p_y_pred.loc.detach().numpy())
                 self.sigma_list.append(p_y_pred.scale.detach().numpy())
 
-
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
                     #print("iteration {}, preds {}".format(self.steps, p_y_pred.loc))
-
 
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
             self.epoch_loss_history.append(epoch_loss / len(data_loader))

@@ -45,6 +45,10 @@ class NeuralProcessTrainer():
         self.steps = 0
         self.epoch_loss_history = []
         self.mu_list = []
+        self.sigma_list = []
+        self.xlist = []
+        self.ylist = []
+
 
     def train(self, data_loader, epochs):
         """
@@ -98,11 +102,18 @@ class NeuralProcessTrainer():
                 epoch_loss += loss.item()
 
                 self.steps += 1
+
+                if (epoch == 0):
+                    self.xlist = x_context
+                    self.ylist = y_context
  
-                self.mu_list.append(p_y_pred.loc.detach())
+                self.mu_list.append(p_y_pred.loc.detach().numpy())
+                self.sigma_list.append(p_y_pred.scale.detach().numpy())
+
 
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
+                    #print("iteration {}, preds {}".format(self.steps, p_y_pred.loc))
 
 
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))

@@ -50,7 +50,8 @@ data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 #np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
 
-input_data = NeuralProcess(1, 1, 50, 50, 50)
+gru = gru.GRUNet(50, 256, 50, 1)
+input_data = NeuralProcess(1, 1, 50, 50, 50, gru, gru.init_hidden(batch_size))
 
 optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
 

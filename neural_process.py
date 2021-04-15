@@ -27,13 +27,16 @@ class NeuralProcess(nn.Module):
     h_dim : int
         Dimension of hidden layer in encoder and decoder.
     """
-    def __init__(self, x_dim, y_dim, r_dim, z_dim, h_dim):
+    def __init__(self, x_dim, y_dim, r_dim, z_dim, h_dim, gru, hidden):
         super(NeuralProcess, self).__init__()
         self.x_dim = x_dim
         self.y_dim = y_dim
         self.r_dim = r_dim
         self.z_dim = z_dim
         self.h_dim = h_dim
+
+        self.gru = gru
+        self.hidden = hidden
 
         # Initialize networks
         self.xy_to_r = Encoder(x_dim, y_dim, h_dim, r_dim)
@@ -67,9 +70,6 @@ class NeuralProcess(nn.Module):
             Shape (batch_size, num_points, y_dim)
         """
         batch_size, num_points, _ = x.size()
-        gru_i = gru.GRUNet(50, 256, 50, 1)
-
-        init_hidden = gru_i.init_hidden(batch_size)
 
         # Flatten tensors, as encoder expects one dimensional inputs
         x_flat = x.view(batch_size * num_points, self.x_dim)
@@ -80,8 +80,8 @@ class NeuralProcess(nn.Module):
         r_i = r_i_flat.view(batch_size, num_points, self.r_dim)
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
-        #
-        r,h = gru_i(r.unsqueeze_(1), init_hidden)
+        # add 1 dim to make it align with the musigencoder
+        r, hidden = gru(r.unsqueeze_(1), hidden)
         # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
         return self.r_to_mu_sigma(r)

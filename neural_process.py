@@ -1,5 +1,4 @@
 import torch
-import gru
 from models import Encoder, MuSigmaEncoder, Decoder
 from torch import nn
 from torch.distributions import Normal
@@ -81,7 +80,7 @@ class NeuralProcess(nn.Module):
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
         # add 1 dim to make it align with the musigencoder
-        r, hidden = gru(r.unsqueeze_(1), hidden)
+        r, self.hidden = self.gru(r.unsqueeze_(1), self.hidden)
         # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
         return self.r_to_mu_sigma(r)

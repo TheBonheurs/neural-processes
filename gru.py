@@ -6,7 +6,7 @@ from tqdm import tqdm_notebook
 from sklearn.preprocessing import MinMaxScaler
 
 class GRUNet(nn.Module):
-    def __init__(self, input_dim, hidden_dim, output_dim, n_layers, drop_prob=0.2):
+    def __init__(self, input_dim, hidden_dim, output_dim, n_layers, drop_prob=0):
         super(GRUNet, self).__init__()
         self.hidden_dim = hidden_dim
         self.n_layers = n_layers

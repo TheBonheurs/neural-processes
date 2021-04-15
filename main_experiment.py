@@ -3,6 +3,7 @@ import numpy as np
 import os
 import sys
 import torch
+import gru
 from torch.utils.data import DataLoader
 from datasets import mnist, celeba, SineData
 from neural_process import NeuralProcessImg

@@ -103,7 +103,7 @@ class NeuralProcessTrainer():
 
                 self.steps += 1
 
-                if (epoch == 0):
+                if (epoch == 0 & i == 0):
                     self.xlist = x_context
                     self.ylist = y_context
  

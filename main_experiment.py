@@ -67,9 +67,9 @@ for epoch in range(epochs):
     with open(directory + '/losses.json', 'w') as f:
         json.dump(np_trainer.epoch_loss_history, f)
     # Save mu's and sigmas at every epoch
-    with open(directory + '/mu.json', 'w') as f:
-        json.dump(np_trainer.mu_list, f, cls=NumpyEncoder)
-    with open(directory + '/sigma.json', 'w') as f:
-        json.dump(np_trainer.sigma_list, f, cls=NumpyEncoder)
+    # with open(directory + '/mu.json', 'w') as f:
+    #     json.dump(np_trainer.mu_list, f, cls=NumpyEncoder)
+    # with open(directory + '/sigma.json', 'w') as f:
+    #     json.dump(np_trainer.sigma_list, f, cls=NumpyEncoder)
     # Save model at every epoch
     torch.save(np_trainer.neural_process.state_dict(), directory + '/model.pt')

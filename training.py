@@ -43,10 +43,6 @@ class NeuralProcessTrainer:
         self.is_img = isinstance(self.neural_process, NeuralProcessImg)
         self.steps = 0
         self.epoch_loss_history = []
-        self.mu_list = []
-        self.sigma_list = []
-        self.xlist = []
-        self.ylist = []
         self.batches = 16
 
     def train(self, data_loader, epochs):

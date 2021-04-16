@@ -4,6 +4,7 @@ import os
 import sys
 import torch
 import gru
+import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from datasets import mnist, celeba, SineData
 from neural_process import NeuralProcessImg
@@ -11,6 +12,8 @@ from neural_process import NeuralProcess
 from time import strftime
 from training import NeuralProcessTrainer
 from numpyencoder import NumpyEncoder
+from math import pi
+
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -60,6 +63,9 @@ np_trainer = NeuralProcessTrainer(device, input_data, optimizer,
                                   num_context_range, num_extra_target_range,
                                   print_freq=100)
 
+x_target = torch.Tensor(np.linspace(-pi, pi, 100))
+x_target = x_target.unsqueeze(1).unsqueeze(0)
+
 for epoch in range(epochs):
     print("Epoch {}".format(epoch + 1))
     np_trainer.train(data_loader, 1)
@@ -71,5 +77,10 @@ for epoch in range(epochs):
     #     json.dump(np_trainer.mu_list, f, cls=NumpyEncoder)
     # with open(directory + '/sigma.json', 'w') as f:
     #     json.dump(np_trainer.sigma_list, f, cls=NumpyEncoder)
+    if (epoch % 20 == 0):
+        plt.plot(x_target[0], np_trainer.neural_process.mu_list[:][:][epoch], 
+             alpha=0.05, c='b')
+        
     # Save model at every epoch
     torch.save(np_trainer.neural_process.state_dict(), directory + '/model.pt')
+plt.scatter(np_trainer.neural_process.xlist, np_trainer.neural_process.ylist, c='k')

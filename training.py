@@ -5,6 +5,7 @@ from torch import nn
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
                    img_mask_to_np_input)
+from math import pi
 
 
 class NeuralProcessTrainer():
@@ -94,6 +95,8 @@ class NeuralProcessTrainer():
                     x, y = data
                     x_context, y_context, x_target, y_target = \
                         context_target_split(x, y, num_context, num_extra_target)
+                    x_target = torch.Tensor(np.linspace(-pi, pi, 100))
+                    x_target = x_target.unsqueeze(1).unsqueeze(0)
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
 

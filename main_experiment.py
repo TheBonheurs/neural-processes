@@ -75,25 +75,28 @@ for epoch in range(epochs):
     # Save model at every epoch
     torch.save(np_trainer.neural_process.state_dict(), directory + '/model.pt')
 
+    if epoch % 50 == 0:
 
-for batch in data_loader:
-    break
-x, y = batch
-x_context, y_context, _, _ = context_target_split(x[0:1], y[0:1], 4, 4)
+        if epoch == 0:
+            for batch in data_loader:
+                break
+            x, y = batch
+            x_context, y_context, _, _ = context_target_split(x[0:1], y[0:1], 4, 4)
 
-x_target = torch.Tensor(np.linspace(-pi, pi, 100))
-x_target = x_target.unsqueeze(1).unsqueeze(0)
+            x_target = torch.Tensor(np.linspace(-pi, pi, 100))
+            x_target = x_target.unsqueeze(1).unsqueeze(0)
 
-input_data.training = False
+        input_data.training = False
 
-for i in range(64):
-    # Neural process returns distribution over y_target
-    p_y_pred = input_data(x_context, y_context, x_target)
-    # Extract mean of distribution
-    mu = p_y_pred.loc.detach()
-    plt.plot(x_target.numpy()[0], mu.numpy()[0],
-             alpha=0.05, c='b')
+        for i in range(64):
+            # Neural process returns distribution over y_target
+            p_y_pred = input_data(x_context, y_context, x_target)
+            # Extract mean of distribution
+            mu = p_y_pred.loc.detach()
+            plt.plot(x_target.numpy()[0], mu.numpy()[0], alpha=0.05, c='b')
 
-plt.scatter(x_context[0].numpy(), y_context[0].numpy(), c='k')
-plt.show()
+        input_data.training = True
+
+        plt.scatter(x_context[0].numpy(), y_context[0].numpy(), c='k')
+        plt.show()
 

@@ -20,7 +20,7 @@ class Encoder(nn.Module):
     r_dim : int
         Dimension of output representation r.
     """
-    def __init__(self, x_dim, y_dim, h_dim, r_dim,):
+    def __init__(self, x_dim, y_dim, h_dim, r_dim):
         super(Encoder, self).__init__()
 
         self.x_dim = x_dim

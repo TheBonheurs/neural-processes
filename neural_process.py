@@ -195,3 +195,4 @@ class NeuralProcessImg(nn.Module):
         x_context, y_context = img_mask_to_np_input(img, context_mask)
         x_target, y_target = img_mask_to_np_input(img, target_mask)
         return self.neural_process(x_context, y_context, x_target, y_target)
+

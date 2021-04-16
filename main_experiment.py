@@ -2,8 +2,9 @@ import json
 import os
 import sys
 import torch
-from gru import GRUNet
 import matplotlib.pyplot as plt
+import numpy as np
+from gru import GRUNet
 from torch.utils.data import DataLoader
 from datasets import mnist, celeba, SineData
 from neural_process import NeuralProcessImg
@@ -46,12 +47,12 @@ epochs = config["epochs"]
 
 dataset = SineData(amplitude_range=(-1., 1.), shift_range=(-.5, .5), num_points=400, num_samples=800)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-#if config["dataset"] == "mnist":
-#    data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
-#elif config["dataset"] == "celeba":
-#    data_loader = celeba(batch_size=batch_size, size=img_size[1])
+if config["dataset"] == "mnist":
+   data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
+elif config["dataset"] == "celeba":
+   data_loader = celeba(batch_size=batch_size, size=img_size[1])
 
-#np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
+np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
 
 gru = GRUNet(50, 256, 50, 1)
 hidden = gru.init_hidden(batch_size)
@@ -78,9 +79,12 @@ for epoch in range(epochs):
     # with open(directory + '/sigma.json', 'w') as f:
     #     json.dump(np_trainer.sigma_list, f, cls=NumpyEncoder)
     if (epoch % 20 == 0):
-        plt.plot(x_target[0], np_trainer.neural_process.mu_list[:][:][epoch], 
+        # print(np.array(np_trainer.mu_list, dtype=float).shape)
+        plt.plot(np.squeeze(np_trainer.xtarget, 2), np.squeeze(np_trainer.mu_list[-1], 2), 
              alpha=0.05, c='b')
+        
         
     # Save model at every epoch
     torch.save(np_trainer.neural_process.state_dict(), directory + '/model.pt')
-plt.scatter(np_trainer.neural_process.xlist, np_trainer.neural_process.ylist, c='k')
+plt.scatter(np_trainer.xlist, np_trainer.ylist, c='k')
+plt.show()

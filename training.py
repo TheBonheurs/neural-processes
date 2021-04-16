@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 from random import randint
 from neural_process import NeuralProcessImg
 from torch.distributions.kl import kl_divergence
@@ -48,6 +49,7 @@ class NeuralProcessTrainer:
         self.sigma_list = []
         self.xlist = []
         self.ylist = []
+        self.xtarget = []
         self.batches = 16
 
     def train(self, data_loader, epochs):
@@ -93,8 +95,8 @@ class NeuralProcessTrainer:
                     x, y = data
                     x_context, y_context, x_target, y_target = \
                         context_target_split(x, y, num_context, num_extra_target)
-                    x_target = torch.Tensor(np.linspace(-pi, pi, 100))
-                    x_target = x_target.unsqueeze(1).unsqueeze(0)
+                    # x_target = torch.Tensor(np.linspace(-pi, pi, 100))
+                    # x_target = x_target.unsqueeze(1).unsqueeze(0)
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
 
@@ -112,6 +114,7 @@ class NeuralProcessTrainer:
  
                 self.mu_list.append(p_y_pred.loc.detach().numpy())
                 self.sigma_list.append(p_y_pred.scale.detach().numpy())
+                self.xtarget = x_target
 
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
@@ -119,6 +122,7 @@ class NeuralProcessTrainer:
 
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
             self.epoch_loss_history.append(epoch_loss / len(data_loader))
+            print("MULIST: {}, first element: {}".format(len(self.mu_list), self.mu_list[epoch].shape))
 
     def _loss(self, p_y_pred, y_target, q_target, q_context):
         """

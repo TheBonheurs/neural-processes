@@ -1,6 +1,5 @@
 import torch
 from random import randint
-from models import GRUNet
 from neural_process import NeuralProcessImg
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
@@ -91,19 +90,8 @@ class NeuralProcessTrainer:
                         context_target_split(x, y, num_context, num_extra_target)
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
-                    print(p_y_pred.loc.shape)
-                    gru_net = GRUNet(1, 256, p_y_pred.loc.shape[1], 2)
 
-                    p_y_pred = torch.cat((p_y_pred.loc, p_y_pred.scale), 0)
-                    print(p_y_pred.shape)
-                    hidden = \
-                        gru_net.init_hidden(32)
-                    p_y_pred_gru, hidden = \
-                        gru_net.forward(p_y_pred, hidden)
-                    print(p_y_pred_gru.shape)
-                    p_y_pred_gru = Normal(p_y_pred_gru[:16], abs(p_y_pred_gru[16:]))
-
-                loss = self._loss(p_y_pred_gru, y_target, q_target, q_context)
+                loss = self._loss(p_y_pred, y_target, q_target, q_context)
                 loss.backward()
                 self.optimizer.step()
 
@@ -113,7 +101,7 @@ class NeuralProcessTrainer:
 
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
-                    
+
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
             self.epoch_loss_history.append(epoch_loss / len(data_loader))
 

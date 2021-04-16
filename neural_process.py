@@ -74,7 +74,7 @@ class NeuralProcess(nn.Module):
         x_flat = x.view(batch_size * num_points, self.x_dim)
         y_flat = y.contiguous().view(batch_size * num_points, self.y_dim)
         # Encode each point into a representation r_i
-        r_i_flat = self.xy_to_r(x_flat, y_flat, get_hidden=True)
+        r_i_flat = self.xy_to_r(x_flat, y_flat)
         # Reshape tensors into batches
         r_i = r_i_flat.view(batch_size, num_points, self.r_dim)
         # Aggregate representations r_i into a single representation r

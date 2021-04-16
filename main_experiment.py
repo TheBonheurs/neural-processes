@@ -1,9 +1,8 @@
 import json
-import numpy as np
 import os
 import sys
 import torch
-import gru
+from gru import GRUNet
 import matplotlib.pyplot as plt
 from torch.utils.data import DataLoader
 from datasets import mnist, celeba, SineData
@@ -54,8 +53,9 @@ data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
 #np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
 
-gru = gru.GRUNet(50, 256, 50, 1)
-input_data = NeuralProcess(1, 1, 50, 50, 50, gru, gru.init_hidden(batch_size))
+gru = GRUNet(50, 256, 50, 1)
+hidden = gru.init_hidden(batch_size)
+input_data = NeuralProcess(1, 1, 50, 50, 50, gru, hidden)
 
 optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
 

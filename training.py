@@ -1,14 +1,13 @@
 import torch
 from random import randint
 from neural_process import NeuralProcessImg
-from torch import nn
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
                    img_mask_to_np_input)
 from math import pi
 
 
-class NeuralProcessTrainer():
+class NeuralProcessTrainer:
     """
     Class to handle training of Neural Processes for functions and images.
 
@@ -51,14 +50,13 @@ class NeuralProcessTrainer():
         self.ylist = []
         self.batches = 16
 
-
     def train(self, data_loader, epochs):
         """
         Trains Neural Process.
 
         Parameters
         ----------
-        dataloader : torch.utils.DataLoader instance
+        data_loader : torch.utils.DataLoader instance
 
         epochs : int
             Number of epochs to train for.
@@ -108,7 +106,7 @@ class NeuralProcessTrainer():
 
                 self.steps += 1
 
-                if (epoch == 0 & i == 0):
+                if epoch == 0 & i == 0:
                     self.xlist = x_context
                     self.ylist = y_context
  
@@ -122,7 +120,6 @@ class NeuralProcessTrainer():
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
             self.epoch_loss_history.append(epoch_loss / len(data_loader))
 
-            
     def _loss(self, p_y_pred, y_target, q_target, q_context):
         """
         Computes Neural Process loss.

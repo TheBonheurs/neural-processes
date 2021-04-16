@@ -2,8 +2,6 @@ import torch
 from random import randint
 from models import GRUNet
 from neural_process import NeuralProcessImg
-from torch import nn
-from torch.distributions import Normal
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
                    img_mask_to_np_input)
@@ -46,6 +44,7 @@ class NeuralProcessTrainer:
         self.is_img = isinstance(self.neural_process, NeuralProcessImg)
         self.steps = 0
         self.epoch_loss_history = []
+        self.batches = 16
 
     def train(self, data_loader, epochs):
         """
@@ -60,6 +59,7 @@ class NeuralProcessTrainer:
         """
         for epoch in range(epochs):
             epoch_loss = 0.
+            self.neural_process.hidden = self.neural_process.gru.init_hidden(self.batches)
             for i, data in enumerate(data_loader):
                 self.optimizer.zero_grad()
 
@@ -113,7 +113,7 @@ class NeuralProcessTrainer:
 
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
-
+                    
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
             self.epoch_loss_history.append(epoch_loss / len(data_loader))
 

@@ -45,6 +45,7 @@ class Encoder(nn.Module):
             Shape (batch_size, y_dim)
         """
         input_pairs = torch.cat((x, y), dim=1)
+
         return self.input_to_hidden(input_pairs)
 
 

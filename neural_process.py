@@ -26,7 +26,7 @@ class NeuralProcess(nn.Module):
     h_dim : int
         Dimension of hidden layer in encoder and decoder.
     """
-    def __init__(self, x_dim, y_dim, r_dim, z_dim, h_dim):
+    def __init__(self, x_dim, y_dim, r_dim, z_dim, h_dim, gru, hidden):
         super(NeuralProcess, self).__init__()
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -34,10 +34,14 @@ class NeuralProcess(nn.Module):
         self.z_dim = z_dim
         self.h_dim = h_dim
 
+        self.gru = gru
+        self.hidden = hidden
+
         # Initialize networks
         self.xy_to_r = Encoder(x_dim, y_dim, h_dim, r_dim)
         self.r_to_mu_sigma = MuSigmaEncoder(r_dim, z_dim)
         self.xz_to_y = Decoder(x_dim, z_dim, h_dim, y_dim)
+
 
     def aggregate(self, r_i):
         """
@@ -65,6 +69,7 @@ class NeuralProcess(nn.Module):
             Shape (batch_size, num_points, y_dim)
         """
         batch_size, num_points, _ = x.size()
+
         # Flatten tensors, as encoder expects one dimensional inputs
         x_flat = x.view(batch_size * num_points, self.x_dim)
         y_flat = y.contiguous().view(batch_size * num_points, self.y_dim)
@@ -74,6 +79,9 @@ class NeuralProcess(nn.Module):
         r_i = r_i_flat.view(batch_size, num_points, self.r_dim)
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
+        # add 1 dim to make it align with the musigencoder
+        if r[0].shape == 16:
+            r, self.hidden = self.gru(r.unsqueeze_(1), self.hidden.detach())
         # Return parameters of distribution
         return self.r_to_mu_sigma(r)
 
@@ -107,7 +115,7 @@ class NeuralProcess(nn.Module):
         batch_size, num_context, x_dim = x_context.size()
         _, num_target, _ = x_target.size()
         _, _, y_dim = y_context.size()
-
+    
         if self.training:
             # Encode target and context (context needs to be encoded to
             # calculate kl term)

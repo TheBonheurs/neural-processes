@@ -4,7 +4,6 @@ from neural_process import NeuralProcessImg
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
                    img_mask_to_np_input)
-from math import pi
 
 
 class NeuralProcessTrainer:
@@ -48,7 +47,6 @@ class NeuralProcessTrainer:
         self.sigma_list = []
         self.xlist = []
         self.ylist = []
-        self.targetlist = []
         self.batches = 16
 
     def train(self, data_loader, epochs):

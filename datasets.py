@@ -88,7 +88,7 @@ def mnist(batch_size=16, size=28, path_to_data='../../mnist_data'):
     return train_loader, test_loader
 
 
-def celeba(batch_size=16, size=32, crop=89, path_to_data='../celeba_data',
+def celeba(batch_size=16, size=32, crop=89, path_to_data='./imgs/celeba_data',
            shuffle=True):
     """CelebA dataloader.
 

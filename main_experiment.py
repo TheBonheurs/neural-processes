@@ -2,8 +2,10 @@ import json
 import os
 import sys
 import torch
-from gru import GRUNet
 import matplotlib.pyplot as plt
+import numpy as np
+from gru import GRUNet
+from utils import context_target_split
 from torch.utils.data import DataLoader
 from datasets import mnist, celeba, SineData
 from neural_process import NeuralProcessImg
@@ -13,7 +15,7 @@ from training import NeuralProcessTrainer
 from numpyencoder import NumpyEncoder
 from math import pi
 
-
+os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Get config file from command line arguments
@@ -63,24 +65,36 @@ np_trainer = NeuralProcessTrainer(device, input_data, optimizer,
                                   num_context_range, num_extra_target_range,
                                   print_freq=100)
 
-x_target = torch.Tensor(np.linspace(-pi, pi, 100))
-x_target = x_target.unsqueeze(1).unsqueeze(0)
-
 for epoch in range(epochs):
     print("Epoch {}".format(epoch + 1))
     np_trainer.train(data_loader, 1)
+
     # Save losses at every epoch
     with open(directory + '/losses.json', 'w') as f:
         json.dump(np_trainer.epoch_loss_history, f)
-    # Save mu's and sigmas at every epoch
-    # with open(directory + '/mu.json', 'w') as f:
-    #     json.dump(np_trainer.mu_list, f, cls=NumpyEncoder)
-    # with open(directory + '/sigma.json', 'w') as f:
-    #     json.dump(np_trainer.sigma_list, f, cls=NumpyEncoder)
-    if (epoch % 20 == 0):
-        plt.plot(x_target[0], np_trainer.neural_process.mu_list[:][:][epoch], 
-             alpha=0.05, c='b')
-        
+
     # Save model at every epoch
     torch.save(np_trainer.neural_process.state_dict(), directory + '/model.pt')
-plt.scatter(np_trainer.neural_process.xlist, np_trainer.neural_process.ylist, c='k')
+
+
+for batch in data_loader:
+    break
+x, y = batch
+x_context, y_context, _, _ = context_target_split(x[0:1], y[0:1], 4, 4)
+
+x_target = torch.Tensor(np.linspace(-pi, pi, 100))
+x_target = x_target.unsqueeze(1).unsqueeze(0)
+
+input_data.training = False
+
+for i in range(64):
+    # Neural process returns distribution over y_target
+    p_y_pred = input_data(x_context, y_context, x_target)
+    # Extract mean of distribution
+    mu = p_y_pred.loc.detach()
+    plt.plot(x_target.numpy()[0], mu.numpy()[0],
+             alpha=0.05, c='b')
+
+plt.scatter(x_context[0].numpy(), y_context[0].numpy(), c='k')
+plt.show()
+

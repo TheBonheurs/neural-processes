@@ -48,6 +48,7 @@ class NeuralProcessTrainer:
         self.sigma_list = []
         self.xlist = []
         self.ylist = []
+        self.targetlist = []
         self.batches = 16
 
     def train(self, data_loader, epochs):
@@ -93,8 +94,6 @@ class NeuralProcessTrainer:
                     x, y = data
                     x_context, y_context, x_target, y_target = \
                         context_target_split(x, y, num_context, num_extra_target)
-                    x_target = torch.Tensor(np.linspace(-pi, pi, 100))
-                    x_target = x_target.unsqueeze(1).unsqueeze(0)
                     p_y_pred, q_target, q_context = \
                         self.neural_process(x_context, y_context, x_target, y_target)
 
@@ -105,13 +104,6 @@ class NeuralProcessTrainer:
                 epoch_loss += loss.item()
 
                 self.steps += 1
-
-                if epoch == 0 & i == 0:
-                    self.xlist = x_context
-                    self.ylist = y_context
- 
-                self.mu_list.append(p_y_pred.loc.detach().numpy())
-                self.sigma_list.append(p_y_pred.scale.detach().numpy())
 
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))

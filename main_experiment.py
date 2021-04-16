@@ -47,12 +47,12 @@ epochs = config["epochs"]
 
 dataset = SineData(amplitude_range=(-1., 1.), shift_range=(-.5, .5), num_points=400, num_samples=800)
 data_loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-if config["dataset"] == "mnist":
-   data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
-elif config["dataset"] == "celeba":
-   data_loader = celeba(batch_size=batch_size, size=img_size[1])
+#if config["dataset"] == "mnist":
+#   data_loader, _ = mnist(batch_size=batch_size, size=img_size[1])
+#elif config["dataset"] == "celeba":
+#   data_loader = celeba(batch_size=batch_size, size=img_size[1])
 
-np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
+#np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
 
 gru = GRUNet(50, 256, 50, 1)
 hidden = gru.init_hidden(batch_size)

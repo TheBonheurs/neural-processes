@@ -1,32 +1,27 @@
 import torch
 from random import randint
 from neural_process import NeuralProcessImg
+from torch import nn
 from torch.distributions.kl import kl_divergence
 from utils import (context_target_split, batch_context_target_mask,
                    img_mask_to_np_input)
 
 
-class NeuralProcessTrainer:
+class NeuralProcessTrainer():
     """
     Class to handle training of Neural Processes for functions and images.
-
     Parameters
     ----------
     device : torch.device
-
     neural_process : neural_process.NeuralProcess or NeuralProcessImg instance
-
     optimizer : one of torch.optim optimizers
-
     num_context_range : tuple of ints
         Number of context points will be sampled uniformly in the range given
         by num_context_range.
-
     num_extra_target_range : tuple of ints
         Number of extra target points (as we always include context points in
         target points, i.e. context points are a subset of target points) will
         be sampled uniformly in the range given by num_extra_target_range.
-
     print_freq : int
         Frequency with which to print loss information during training.
     """
@@ -43,26 +38,18 @@ class NeuralProcessTrainer:
         self.is_img = isinstance(self.neural_process, NeuralProcessImg)
         self.steps = 0
         self.epoch_loss_history = []
-        self.mu_list = []
-        self.sigma_list = []
-        self.xlist = []
-        self.ylist = []
-        self.batches = 16
 
     def train(self, data_loader, epochs):
         """
         Trains Neural Process.
-
         Parameters
         ----------
-        data_loader : torch.utils.DataLoader instance
-
+        dataloader : torch.utils.DataLoader instance
         epochs : int
             Number of epochs to train for.
         """
         for epoch in range(epochs):
             epoch_loss = 0.
-            self.neural_process.hidden = self.neural_process.gru.init_hidden(self.batches)
             for i, data in enumerate(data_loader):
                 self.optimizer.zero_grad()
 
@@ -105,7 +92,6 @@ class NeuralProcessTrainer:
 
                 if self.steps % self.print_freq == 0:
                     print("iteration {}, loss {:.3f}".format(self.steps, loss.item()))
-                    #print("iteration {}, preds {}".format(self.steps, p_y_pred.loc))
 
             print("Epoch: {}, Avg_loss: {}".format(epoch, epoch_loss / len(data_loader)))
             self.epoch_loss_history.append(epoch_loss / len(data_loader))
@@ -113,18 +99,14 @@ class NeuralProcessTrainer:
     def _loss(self, p_y_pred, y_target, q_target, q_context):
         """
         Computes Neural Process loss.
-
         Parameters
         ----------
         p_y_pred : one of torch.distributions.Distribution
             Distribution over y output by Neural Process.
-
         y_target : torch.Tensor
             Shape (batch_size, num_target, y_dim)
-
         q_target : one of torch.distributions.Distribution
             Latent distribution for target points.
-
         q_context : one of torch.distributions.Distribution
             Latent distribution for context points.
         """

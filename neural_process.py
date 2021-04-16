@@ -8,25 +8,20 @@ from utils import img_mask_to_np_input
 class NeuralProcess(nn.Module):
     """
     Implements Neural Process for functions of arbitrary dimensions.
-
     Parameters
     ----------
     x_dim : int
         Dimension of x values.
-
     y_dim : int
         Dimension of y values.
-
     r_dim : int
         Dimension of output representation r.
-
     z_dim : int
         Dimension of latent variable z.
-
     h_dim : int
         Dimension of hidden layer in encoder and decoder.
     """
-    def __init__(self, x_dim, y_dim, r_dim, z_dim, h_dim, gru, hidden):
+    def __init__(self, x_dim, y_dim, r_dim, z_dim, h_dim):
         super(NeuralProcess, self).__init__()
         self.x_dim = x_dim
         self.y_dim = y_dim
@@ -34,20 +29,15 @@ class NeuralProcess(nn.Module):
         self.z_dim = z_dim
         self.h_dim = h_dim
 
-        self.gru = gru
-        self.hidden = hidden
-
         # Initialize networks
         self.xy_to_r = Encoder(x_dim, y_dim, h_dim, r_dim)
         self.r_to_mu_sigma = MuSigmaEncoder(r_dim, z_dim)
         self.xz_to_y = Decoder(x_dim, z_dim, h_dim, y_dim)
 
-
     def aggregate(self, r_i):
         """
         Aggregates representations for every (x_i, y_i) pair into a single
         representation.
-
         Parameters
         ----------
         r_i : torch.Tensor
@@ -59,17 +49,14 @@ class NeuralProcess(nn.Module):
         """
         Maps (x, y) pairs into the mu and sigma parameters defining the normal
         distribution of the latent variables z.
-
         Parameters
         ----------
         x : torch.Tensor
             Shape (batch_size, num_points, x_dim)
-
         y : torch.Tensor
             Shape (batch_size, num_points, y_dim)
         """
         batch_size, num_points, _ = x.size()
-
         # Flatten tensors, as encoder expects one dimensional inputs
         x_flat = x.view(batch_size * num_points, self.x_dim)
         y_flat = y.contiguous().view(batch_size * num_points, self.y_dim)
@@ -79,10 +66,6 @@ class NeuralProcess(nn.Module):
         r_i = r_i_flat.view(batch_size, num_points, self.r_dim)
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
-        # add 1 dim to make it align with the musigencoder
-        if r[0].shape == 16:
-            r, self.hidden = self.gru(r.unsqueeze_(1), self.hidden.detach())
-        # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
         return self.r_to_mu_sigma(r)
 
@@ -90,22 +73,17 @@ class NeuralProcess(nn.Module):
         """
         Given context pairs (x_context, y_context) and target points x_target,
         returns a distribution over target points y_target.
-
         Parameters
         ----------
         x_context : torch.Tensor
             Shape (batch_size, num_context, x_dim). Note that x_context is a
             subset of x_target.
-
         y_context : torch.Tensor
             Shape (batch_size, num_context, y_dim)
-
         x_target : torch.Tensor
             Shape (batch_size, num_target, x_dim)
-
         y_target : torch.Tensor or None
             Shape (batch_size, num_target, y_dim). Only used during training.
-
         Note
         ----
         We follow the convention given in "Empirical Evaluation of Neural
@@ -116,7 +94,7 @@ class NeuralProcess(nn.Module):
         batch_size, num_context, x_dim = x_context.size()
         _, num_target, _ = x_target.size()
         _, _, y_dim = y_context.size()
-    
+
         if self.training:
             # Encode target and context (context needs to be encoded to
             # calculate kl term)
@@ -147,18 +125,14 @@ class NeuralProcess(nn.Module):
 class NeuralProcessImg(nn.Module):
     """
     Wraps regular Neural Process for image processing.
-
     Parameters
     ----------
     img_size : tuple of ints
         E.g. (1, 28, 28) or (3, 32, 32)
-
     r_dim : int
         Dimension of output representation r.
-
     z_dim : int
         Dimension of latent variable z.
-
     h_dim : int
         Dimension of hidden layer in encoder and decoder.
     """
@@ -178,16 +152,13 @@ class NeuralProcessImg(nn.Module):
         """
         Given an image and masks of context and target points, returns a
         distribution over pixel intensities at the target points.
-
         Parameters
         ----------
         img : torch.Tensor
             Shape (batch_size, channels, height, width)
-
         context_mask : torch.ByteTensor
             Shape (batch_size, height, width). Binary mask indicating
             the pixels to be used as context.
-
         target_mask : torch.ByteTensor
             Shape (batch_size, height, width). Binary mask indicating
             the pixels to be used as target.

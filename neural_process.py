@@ -80,7 +80,8 @@ class NeuralProcess(nn.Module):
         # Aggregate representations r_i into a single representation r
         r = self.aggregate(r_i)
         # add 1 dim to make it align with the musigencoder
-        r, self.hidden = self.gru(r.unsqueeze_(1), self.hidden.detach())
+        if r[0].shape == 16:
+            r, self.hidden = self.gru(r.unsqueeze_(1), self.hidden.detach())
         # det_rep = self.xy_to_r(x_flat, y_flat, hidden=out)
         # Return parameters of distribution
         return self.r_to_mu_sigma(r)
@@ -161,7 +162,7 @@ class NeuralProcessImg(nn.Module):
     h_dim : int
         Dimension of hidden layer in encoder and decoder.
     """
-    def __init__(self, img_size, r_dim, z_dim, h_dim):
+    def __init__(self, img_size, r_dim, z_dim, h_dim, gru, hidden):
         super(NeuralProcessImg, self).__init__()
         self.img_size = img_size
         self.num_channels, self.height, self.width = img_size
@@ -169,9 +170,12 @@ class NeuralProcessImg(nn.Module):
         self.z_dim = z_dim
         self.h_dim = h_dim
 
+        self.gru = gru
+        self.hidden = hidden
+
         self.neural_process = NeuralProcess(x_dim=2, y_dim=self.num_channels,
                                             r_dim=r_dim, z_dim=z_dim,
-                                            h_dim=h_dim)
+                                            h_dim=h_dim, gru=gru, hidden=hidden)
 
     def forward(self, img, context_mask, target_mask):
         """

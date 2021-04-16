@@ -52,20 +52,18 @@ if config["dataset"] == "mnist":
 elif config["dataset"] == "celeba":
    data_loader = celeba(batch_size=batch_size, size=img_size[1])
 
-np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim).to(device)
-
-gru = GRUNet(50, 256, 50, 1)
+gru = GRUNet(r_dim, h_dim, r_dim, 1)
 hidden = gru.init_hidden(batch_size)
 input_data = NeuralProcess(1, 1, 50, 50, 50, gru, hidden)
 
+np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim, gru, hidden).to(device)
+
 optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
 
-np_trainer = NeuralProcessTrainer(device, input_data, optimizer,
+np_trainer = NeuralProcessTrainer(device, np_img, optimizer,
                                   num_context_range, num_extra_target_range,
                                   print_freq=100)
-
-x_target = torch.Tensor(np.linspace(-pi, pi, 100))
-x_target = x_target.unsqueeze(1).unsqueeze(0)
+model = None
 
 for epoch in range(epochs):
     print("Epoch {}".format(epoch + 1))
@@ -78,13 +76,59 @@ for epoch in range(epochs):
     #     json.dump(np_trainer.mu_list, f, cls=NumpyEncoder)
     # with open(directory + '/sigma.json', 'w') as f:
     #     json.dump(np_trainer.sigma_list, f, cls=NumpyEncoder)
-    if (epoch % 20 == 0):
-        # print(np.array(np_trainer.mu_list, dtype=float).shape)
-        plt.plot(np.squeeze(np_trainer.xtarget, 2), np.squeeze(np_trainer.mu_list[-1], 2), 
-             alpha=0.05, c='b')
-        
         
     # Save model at every epoch
     torch.save(np_trainer.neural_process.state_dict(), directory + '/model.pt')
-plt.scatter(np_trainer.xlist, np_trainer.ylist, c='k')
+    model = np_trainer.neural_process
+
+import imageio
+from torchvision.utils import make_grid
+
+# Read images into torch.Tensor
+all_imgs = torch.zeros(8, 3, 32, 32)
+
+dat = iter(data_loader)
+
+for i in range(8):
+    img = imageio.imread('imgs/celeba-examples/{}.png'.format(i + 1))
+    all_imgs[i] = torch.Tensor(img.transpose(2, 0, 1) / 255.)
+
+# Visualize sample on a grid
+img_grid = make_grid(all_imgs, nrow=4, pad_value=1.)
+plt.imshow(img_grid.permute(1, 2, 0).numpy())
+plt.show()
+
+# Select one of the images to perform inpainting
+img = all_imgs[0]
+
+# Define a binary mask to occlude image. For Neural Processes,
+# the context points will be defined as the visible pixels
+context_mask = torch.zeros((32, 32)).byte()
+context_mask[:16, :] = 1  # Top half of pixels are visible
+
+# Show occluded image
+occluded_img = img * context_mask.float()
+plt.imshow(occluded_img.permute(1, 2, 0).numpy())
+plt.show()
+
+from utils import inpaint
+
+num_inpaintings = 8  # Number of inpaintings to sample from model
+all_inpaintings = torch.zeros(num_inpaintings, 3, 32, 32)
+
+# Load config file for celebA model
+folder = 'trained_models/celeba'
+config_file = folder + '/config.json'
+model_file ='/results_2021-04-16_18-40/model.pt'
+
+model.load_state_dict(torch.load(folder + model_file, map_location=lambda storage, loc: storage))
+
+# Sample several inpaintings
+for i in range(num_inpaintings):
+    all_inpaintings[i] = inpaint(model, img, context_mask, device)
+
+# Visualize inpainting results on a grid
+inpainting_grid = make_grid(all_inpaintings, nrow=4, pad_value=1.)
+print("HALLOOOOOOOOOOO")
+plt.imshow(inpainting_grid.permute(1, 2, 0).numpy())
 plt.show()

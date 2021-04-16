@@ -58,7 +58,7 @@ input_data = NeuralProcess(1, 1, 50, 50, 50, gru, hidden)
 
 np_img = NeuralProcessImg(img_size, r_dim, z_dim, h_dim, gru, hidden).to(device)
 
-optimizer = torch.optim.Adam(input_data.parameters(), lr=config["lr"])
+optimizer = torch.optim.Adam(np_img.parameters(), lr=config["lr"])
 
 np_trainer = NeuralProcessTrainer(device, np_img, optimizer,
                                   num_context_range, num_extra_target_range,

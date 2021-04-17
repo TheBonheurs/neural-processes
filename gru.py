@@ -33,7 +33,7 @@ class GRUNet(nn.Module):
         
     """
         x : torch.Tensor
-            Shape (batch_size, hidden_dim, x_dim)
+            Shape (batch_size, x_dim, hidden_dim)
 
         h : torch.Tensor
             Shape (x_dim,batch_size, hidden_dim)
